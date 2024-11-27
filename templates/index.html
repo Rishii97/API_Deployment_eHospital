@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to e-Hospital</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        form {
+            margin: 20px auto;
+            max-width: 400px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to e-Hospital</h1>
+    <p>Interact with the database using the form below:</p>
+
+    <!-- Form to Fetch Data -->
+    <form id="fetch-form" onsubmit="fetchTableData(event)">
+        <input type="text" id="table-name-fetch" placeholder="Enter table name to fetch data" required>
+        <button type="submit">Fetch Data</button>
+    </form>
+
+    <!-- Form to Insert Data -->
+    <form id="insert-form" onsubmit="insertTableData(event)">
+        <input type="text" id="table-name-insert" placeholder="Enter table name to insert data" required>
+        <textarea id="insert-data" placeholder="Enter JSON data for insertion" rows="5" required></textarea>
+        <button type="submit">Insert Data</button>
+    </form>
+
+    <div id="response"></div>
+
+    <script>
+        const apiUrl = `${window.location.origin}/table`;
+
+        async function fetchTableData(event) {
+            event.preventDefault();
+            const tableName = document.getElementById('table-name-fetch').value;
+            const responseDiv = document.getElementById('response');
+
+            try {
+                const response = await fetch(`${apiUrl}/${tableName}`);
+                const data = await response.json();
+                responseDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                responseDiv.textContent = 'Error fetching data.';
+            }
+        }
+
+        async function insertTableData(event) {
+            event.preventDefault();
+            const tableName = document.getElementById('table-name-insert').value;
+            const jsonData = document.getElementById('insert-data').value;
+            const responseDiv = document.getElementById('response');
+
+            try {
+                const response = await fetch(`${apiUrl}/${tableName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: jsonData
+                });
+                const result = await response.json();
+                responseDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                responseDiv.textContent = 'Error inserting data.';
+            }
+        }
+    </script>
+</body>
+</html>
