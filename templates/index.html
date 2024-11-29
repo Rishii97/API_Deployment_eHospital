@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to e-Hospital</title>
+    <title>E-Hospital</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
             margin: 20px;
+            text-align: center;
         }
         h1 {
             color: #2c3e50;
@@ -17,7 +17,7 @@
             margin: 20px auto;
             max-width: 400px;
         }
-        input, button {
+        input, button, textarea {
             padding: 10px;
             margin: 10px 0;
             width: 100%;
@@ -31,30 +31,18 @@
         button:hover {
             background-color: #2980b9;
         }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            overflow: auto;
+        }
     </style>
-</head>
-<body>
-    <h1>Welcome to e-Hospital</h1>
-    <p>Interact with the database using the form below:</p>
-
-    <!-- Form to Fetch Data -->
-    <form id="fetch-form" onsubmit="fetchTableData(event)">
-        <input type="text" id="table-name-fetch" placeholder="Enter table name to fetch data" required>
-        <button type="submit">Fetch Data</button>
-    </form>
-
-    <!-- Form to Insert Data -->
-    <form id="insert-form" onsubmit="insertTableData(event)">
-        <input type="text" id="table-name-insert" placeholder="Enter table name to insert data" required>
-        <textarea id="insert-data" placeholder="Enter JSON data for insertion" rows="5" required></textarea>
-        <button type="submit">Insert Data</button>
-    </form>
-
-    <div id="response"></div>
-
     <script>
         const apiUrl = `${window.location.origin}/table`;
 
+        // Function to fetch table data and display it
         async function fetchTableData(event) {
             event.preventDefault();
             const tableName = document.getElementById('table-name-fetch').value;
@@ -63,12 +51,17 @@
             try {
                 const response = await fetch(`${apiUrl}/${tableName}`);
                 const data = await response.json();
-                responseDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                if (response.ok) {
+                    responseDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    responseDiv.textContent = `Error: ${data.error}`;
+                }
             } catch (error) {
                 responseDiv.textContent = 'Error fetching data.';
             }
         }
 
+        // Function to insert data into a table
         async function insertTableData(event) {
             event.preventDefault();
             const tableName = document.getElementById('table-name-insert').value;
@@ -87,6 +80,85 @@
                 responseDiv.textContent = 'Error inserting data.';
             }
         }
+
+        // Function to download CSV
+        async function downloadCSV() {
+            const tableName = document.getElementById('table-name-fetch').value;
+            const responseDiv = document.getElementById('response');
+            try {
+                const response = await fetch(`${apiUrl}/${tableName}`);
+                const data = await response.json();
+                if (response.ok) {
+                    const csvData = convertToCSV(data);
+                    const blob = new Blob([csvData], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${tableName}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    responseDiv.textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                responseDiv.textContent = 'Error downloading CSV.';
+            }
+        }
+
+        // Function to download JSON
+        async function downloadJSON() {
+            const tableName = document.getElementById('table-name-fetch').value;
+            try {
+                const response = await fetch(`${apiUrl}/${tableName}`);
+                const data = await response.json();
+                if (response.ok) {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${tableName}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                alert('Error downloading JSON.');
+            }
+        }
+
+        // Helper function to convert JSON data to CSV format
+        function convertToCSV(data) {
+            if (!Array.isArray(data) || data.length === 0) return '';
+            const keys = Object.keys(data[0]);
+            const csvRows = [keys.join(',')];
+            data.forEach(row => {
+                csvRows.push(keys.map(key => JSON.stringify(row[key] || '')).join(','));
+            });
+            return csvRows.join('\n');
+        }
     </script>
+</head>
+<body>
+    <h1>Welcome to E-Hospital</h1>
+    <p>Interact with the database using the form below:</p>
+
+    <!-- Form to Fetch Data -->
+    <form id="fetch-form" onsubmit="fetchTableData(event)">
+        <input type="text" id="table-name-fetch" placeholder="Enter table name to fetch data" required>
+        <button type="submit">Fetch Data</button>
+        <button type="button" onclick="downloadCSV()">Download CSV</button>
+        <button type="button" onclick="downloadJSON()">Download JSON</button>
+    </form>
+
+    <!-- Form to Insert Data -->
+    <form id="insert-form" onsubmit="insertTableData(event)">
+        <input type="text" id="table-name-insert" placeholder="Enter table name to insert data" required>
+        <textarea id="insert-data" placeholder="Enter JSON data for insertion" rows="5" required></textarea>
+        <button type="submit">Insert Data</button>
+    </form>
+
+    <h3>Output:</h3>
+    <div id="response"></div>
 </body>
 </html>
