@@ -7,8 +7,8 @@ app = Flask(__name__)
 db_config = {
     "host": "localhost",
     "user": "root",
-    "password": "shaalimaar@1",
-    "database": "e_hospital"
+    "password": "Password",
+    "database": "<database_name>"
 }
 
 # Function to connect to the database
